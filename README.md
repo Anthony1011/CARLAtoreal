@@ -157,8 +157,21 @@ Two baselines, chosen by eye on side-by-side comparison rather than by metric:
 
 | Condition | Baseline | How to produce |
 |---|---|---|
-| Sunny | **v75** (since 2026-09-11) | `TEXTURE=1 render_model.sh sunny carla2real_semantic_v75_pz_tex v75 <Town...>` |
+| Sunny | **v75** (since 2026-09-11) | `TEXTURE=1 render_model.sh sunny carla2real_semantic_v75_pz_tex v75 <Town...>`, **then** `BASE_TAG=v75 COLOUR_SRC=v50m make_v50r.sh` |
 | Night | **v76** (since 2026-09-11) | `render_model.sh night carla2real_semantic_v76_pz_night v76 <Town...>` |
+
+**Sunny needs the second step.** `render_model.sh` is the evaluation chain — it renders, stabilises
+and applies the protection passes, which is enough to score a model but is *not* the full sunny
+delivery. Three stages only the delivery chain runs, and the artefact each one removes:
+
+| stage | without it |
+|---|---|
+| `protect_vehicle_colour.py` | the generator repaints vehicles per frame, so a car cycles through colours as it drives. The fix takes hue and saturation from CARLA — identical every frame — and keeps the render's own luminance. |
+| `protect_buildings.py` | facades are invented from a label that says only "building", differently each frame. That reinvention *is* the building shimmer; injecting CARLA's real window grids stops it and raises facade detail. |
+| `class_deshimmer.py` | vehicle shadows and contact areas break up frame to frame. Cars want strength 0.55 at flow tolerance 4.5 — looser trails, tighter flickers. |
+
+Night does not need it: `render_model.sh` composites CARLA's lamp pools back in, and the night
+corpus does not show the vehicle-repaint behaviour to the same degree.
 
 **Both baselines are trained only on openly licensed data** — PandaSet (CC BY 4.0) and the Zenseact
 Open Dataset (CC BY-SA 4.0), alongside Mapillary Vistas and Cityscapes. The 21 videos of
