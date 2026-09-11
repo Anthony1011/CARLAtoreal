@@ -7,23 +7,61 @@ Set `CARLA2REAL_DATA` to wherever you keep the bulk data (default `./datasets`).
 
 ## Training corpus
 
-The current models were trained on 32,475 image/label pairs:
+Every source below is public and downloadable. The videos of unestablished provenance that earlier
+models used are **no longer part of either corpus**.
+
+### Sunny — 41,646 pairs (`training_pz`)
 
 | Share | Dataset | Download | Licence |
 |---:|---|---|---|
 | 19,293 | **Mapillary Vistas** (training + validation) | https://www.mapillary.com/dataset/vistas | Free for research. Registration and acceptance of their terms required. |
+| 10,000 | **Zenseact Open Dataset** — Frames, DNAT images | https://zod.zenseact.com · devkit https://github.com/zenseact/zod | **CC BY-SA 4.0** (devkit MIT). Commercial use permitted, **share-alike**. |
+| 8,240 | **PandaSet** — front camera | https://huggingface.co/datasets/georghess/pandaset · https://pandaset.org | **CC BY 4.0** plus Scale AI / Hesai Dataset Terms. Commercial use permitted, no share-alike. |
 | 4,113 | **Cityscapes** (`leftImg8bit` + `gtFine`) | https://www.cityscapes-dataset.com/downloads/ | Free for research. Registration required. |
-| 9,069 | 21 driving videos, internally called "NuRec" | **No link — see below** | **Unresolved.** |
 
-### About the 21 videos
+### Night — 12,546 pairs (`training_pz_night`)
 
-They are **not** NVIDIA's NuRec dataset despite the internal name; that is 3D-reconstructed scenes
-in USDZ format, not video. Inspection of the files shows several different third-party creator
-watermarks, audio tracks, and no accompanying licence or manifest, so they are most likely driving
-videos collected from the web. They cannot be redistributed and no download link can be offered.
+| Share | Dataset | Download | Licence |
+|---:|---|---|---|
+| 5,000 | **Zenseact Open Dataset** — Frames, DNAT, measured night | as above | **CC BY-SA 4.0** |
+| 4,320 | **PandaSet** — 18 night scenes, three forward cameras | as above | **CC BY 4.0** |
+| 2,670 | **Dark Zurich** | https://www.trace.ethz.ch/publications/2019/GCMA_UIoU/ | **Check before commercial use** — released for academic research. |
+| 556 | Mapillary Vistas night subset, and 534 frames from the withdrawn video set | see note below | mixed |
 
-**You can train without them.** Mapillary Vistas plus Cityscapes gives 23,406 pairs — 72% of the
-corpus used here — and both are properly licensed for research. See `THIRD_PARTY_NOTICES.md`.
+### Getting PandaSet
+
+One archive, ~44.5 GB, ungated. `LICENSE.txt` sits in every scene directory — read it, because the
+Dataset Terms add conditions on top of CC BY 4.0 (no use of the Scale AI or Hesai name or logo
+beyond attribution; no use of the data to identify anyone; derived data carries the same terms).
+
+### Getting ZOD
+
+Request access at `opendataset@zenseact.com`; they reply with a personal Dropbox link. The devkit
+CLI is the smooth path, and the data is also mirrored on Academic Torrents:
+
+```bash
+pip install zod
+zod download --url "<your dropbox link>" --output-dir <dir> \
+    --subset frames --version full --dnat --no-blur \
+    --no-lidar --no-oxts --no-annotations --no-infos --rm -y
+```
+
+**Use `--dnat`, not the default `--blur`.** Both are anonymised, but blur leaves smeared patches in
+the image while DNAT paints synthetic faces and plates over them. A generator trained on blurred
+regions learns to *paint blur*, which is the artefact this pipeline exists to remove.
+
+Images only is ~48 GB of archives; lidar, oxts and annotations are most of the full download and
+nothing here reads them.
+
+### Two things to check before you rely on this
+
+**Dark Zurich is still in the night corpus** (2,670 pairs, 21%) and is released for academic
+research. If the night model needs to be commercially clean, that share has to be replaced — ZOD
+night alone is large enough to do it.
+
+**Mapillary Vistas and Cityscapes are "free for research".** Together they are 56% of the sunny
+corpus. That is fine for research use and is a question worth answering before commercial use.
+PandaSet and ZOD are the only two sources here that permit commercial use outright.
 
 ## Simulator
 
@@ -50,8 +88,10 @@ $CARLA2REAL_DATA/
 │   └── validation/{images,v2.0/labels}/
 ├── training_v11_city/           Cityscapes, converted to the Mapillary-65 label space
 │   ├── train_img/  train_label/
-├── training_v49_chroma/         the assembled training corpus
-│   ├── train_img/  train_label/  train_edge/  train_depth/  train_normal/  train_chroma/
+├── training_pz/                 sunny corpus (Mapillary + ZOD + PandaSet + Cityscapes)
+│   ├── train_img/  train_label/  train_edge/  train_depth/  train_normal/  train_chroma/  train_texture/
+├── training_pz_night/           night corpus (ZOD + PandaSet + Dark Zurich + Mapillary night)
+│   ├── train_img/  train_label/  train_edge/  train_depth/  train_normal/  train_light/
 ├── recorded_<Town>_<weather>_inst/
 │   ├── rgb/  semantic/
 └── training_v12_mapillary/      per-town inference channels

@@ -1,6 +1,8 @@
 # Third-party components and licensing status
 
-**Read this before any public release.** The pix2pixHD question is resolved; the training-data question is not.
+**Read this before any public release.** The pix2pixHD question is resolved. The training-data
+question is resolved for the current baselines (v75 sunny, v76 night), which train only on public
+datasets — but two conditions attach to them, in "Training data provenance" below.
 
 This repository is a derivative work. The table below lists what it is built on and what still
 needs checking. Nothing here is legal advice; it is a list of the things a release review has to
@@ -14,7 +16,10 @@ answer.
 | **MoGe** (monocular depth/normal) | Generates the depth and normal channels | Not redistributed here. Confirm licence for the intended use. |
 | **Deep Video Prior / DVP** | Optional temporal stage | Not redistributed here. Confirm licence. |
 | **Real-ESRGAN** | Optional upscaling weights | Weights not redistributed. Confirm licence. |
-| **Training corpus** | Described in `docs/`; not redistributed | **UNRESOLVED, AND THE MOST SERIOUS ITEM.** See "Training data provenance" below. |
+| **Training corpus** | Described in `datasets/README.md`; not redistributed | **RESOLVED for v75 / v76.** Every source is public and downloadable. Two conditions attach: ZOD is share-alike, and Dark Zurich is academic-research-only. See "Training data provenance" below. |
+| **PandaSet** (Scale AI / Hesai) | 8,240 sunny + 4,320 night pairs | CC BY 4.0 **plus Dataset Terms**, which control where they conflict: no use of the Scale AI or Hesai name or logo beyond attribution, no use of the data to identify any person, and *derived data carries the same terms*. Commercial use permitted, no share-alike. |
+| **Zenseact Open Dataset (ZOD)** | 10,000 sunny + 5,000 night pairs | Data **CC BY-SA 4.0**; devkit MIT. Commercial use permitted. **Share-alike** — see the weights note below. |
+| **Dark Zurich** (ETH Zurich) | 2,670 night pairs, 21% of the night corpus | Released for academic research. **Confirm before any commercial use of the night model.** |
 | **External perception stack** | `score_vp.py`, `PERCEPTION_ROOT` | Not part of this project and **not redistributed**. Only invoked as an optional external scorer. |
 
 ## Before the repository is made public
@@ -24,18 +29,40 @@ answer.
    `pix2pixHD/`), compatible with the above.
 3. Confirm the training-data references in `docs/` are cleared for publication.
 4. Note that no model weights are included. Publishing trained weights is a separate decision with
-   its own licensing consequences, because the weights derive from the training corpus.
+   its own licensing consequences — see "Publishing weights from these models" below.
 
 
 ## Training data provenance
 
-The corpus used for the current models is 32,475 image/label pairs:
+**Changed 2026-09-11.** The 21 videos of unestablished provenance were removed from both corpora and
+replaced with PandaSet and ZOD. The current baselines — **v75** sunny and **v76** night — contain
+none of that footage. The full source tables are in `datasets/README.md`.
 
-| Share | Source | Status |
-|---|---|---|
-| 19,293 | **Mapillary Vistas** (training + validation) | Public. Free for research after registering and accepting the terms: https://www.mapillary.com/dataset/vistas |
-| 4,113 | **Cityscapes** | Public. Free for research after registering: https://www.cityscapes-dataset.com/ |
-| 9,069 | 21 videos in `datasets/test_mp4/`, referred to internally as "NuRec" | **Provenance unestablished. Treat as not redistributable until resolved.** |
+| Corpus | Pairs | Sources |
+|---|---:|---|
+| Sunny `training_pz` | 41,646 | Mapillary Vistas 19,293 · ZOD 10,000 · PandaSet 8,240 · Cityscapes 4,113 |
+| Night `training_pz_night` | 12,546 | ZOD 5,000 · PandaSet 4,320 · Dark Zurich 2,670 · other 556 |
+
+### Publishing weights from these models
+
+ZOD is **CC BY-SA 4.0**, and share-alike propagates to derivative works. Whether trained weights are
+a derivative of their training data is legally unsettled. Anyone publishing weights from v75 or v76
+should assume they are and licence those weights **CC BY-SA 4.0**. The code in this repository is
+unaffected and remains Apache-2.0; licences apply to what they cover, and the code is not the data.
+
+If weights are needed without that question, **v73** (sunny) and **v69** (night) train on PandaSet
+only — CC BY 4.0, no share-alike — and score within half a CIPO point of the baselines. That is the
+reason both were kept.
+
+### Still open
+
+1. **Dark Zurich is 21% of the night corpus** and is released for academic research. Replace that
+   share with ZOD night before treating the night model as commercially clean.
+2. **Mapillary Vistas and Cityscapes are "free for research"** and together are 56% of the sunny
+   corpus. Fine for research; answer it before commercial use. PandaSet and ZOD are the only two
+   sources here that permit commercial use outright.
+
+### The 21 videos, for the record
 
 ### About the 21 videos
 

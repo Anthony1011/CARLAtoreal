@@ -155,14 +155,48 @@ packaged from is ~550 GB; the repository is under 1 MB. A clone will not run unt
 
 Two baselines, chosen by eye on side-by-side comparison rather than by metric:
 
-| Condition | Baseline | Delivery chain |
+| Condition | Baseline | How to produce |
 |---|---|---|
-| Sunny | **v50m** (since 2026-09-02) | `make_v50m.sh` |
-| Night | **v59** | `render_model.sh night <model> v59 <Town...>` with `TEMPORAL=1` |
+| Sunny | **v75** (since 2026-09-11) | `TEXTURE=1 render_model.sh sunny carla2real_semantic_v75_pz_tex v75 <Town...>` |
+| Night | **v76** (since 2026-09-11) | `render_model.sh night carla2real_semantic_v76_pz_night v76 <Town...>` |
 
-**The sunny baseline is not a trained model, and that is the point.** `make_v50m.sh` renders with
-`v50_graft`, repairs it through the delivery chain, then grades it with colour lifted from a `v63`
-render of the same town by `fuse_colour.py`. Reproducing it needs both renders, frame-aligned.
+**Both baselines are trained only on openly licensed data** — PandaSet (CC BY 4.0) and the Zenseact
+Open Dataset (CC BY-SA 4.0), alongside Mapillary Vistas and Cityscapes. The 21 videos of
+unestablished provenance that earlier models were trained on are gone from both corpora. See
+`datasets/README.md` for what to download and `THIRD_PARTY_NOTICES.md` for what each licence
+requires.
+
+**ZOD is share-alike, and that reaches the weights.** ZOD's CC BY-SA 4.0 requires derivative works
+to carry the same licence. Whether trained weights are a derivative of their training data is
+unsettled, but anyone publishing weights from these two models should assume they are and licence
+them CC BY-SA 4.0. The code in this repository is unaffected and remains Apache-2.0. If you need
+weights without that question, `v73` (sunny) and `v69` (night) are trained on PandaSet only — CC BY
+4.0, no share-alike — and score within half a CIPO point of the baselines.
+
+### Why these two
+
+Measured against the previous baselines on Vision Pilot, same towns, like for like:
+
+| | previous | new | CIPO |
+|---|---|---|---|
+| Night | v59 | **v76** | **+3.3 pts** — better on both towns individually |
+| Sunny | v50m | **v75** | −0.5 pts, at roughly half the false-alarm rate |
+
+Night is a straight improvement. Sunny trades about half a point of recall for a clean licence and
+a much lower false-alarm rate, and was chosen on the side-by-side rather than on the number.
+
+The image metrics are where the ZOD run paid off. Fine-tuning on a corpus dominated by one source
+drifts tone badly — v73, PandaSet only, comes out at −34.0 on cars and +38.3 on road. Adding a
+second, differently exposed licensed source collapses that to −8.4/−4.6 on v75 and +1.6/−2.0 on
+v76, the best tone readings this project has recorded. Neither a lower learning rate nor reweighting
+the corpus had moved it; a second source did.
+
+### The previous sunny baseline, for reference
+
+**v50m was not a trained model, and that was the point.** `make_v50m.sh` renders with `v50_graft`,
+repairs it through the delivery chain, then grades it with colour lifted from a `v63` render of the
+same town by `fuse_colour.py`. Reproducing it needs both renders, frame-aligned. It is kept because
+the delivery chain it established is the one v75 and v76 still run through.
 
 v50m is v50l plus three fixes, each aimed at a defect found by watching the clips:
 
