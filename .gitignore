@@ -60,6 +60,15 @@ config.local.sh
 /tmp/
 /logs/
 
+# Local agent instructions, memory, and working notes.
+AGENTS.md
+AGENT.ms
+MEMORY.md
+/notes/
+/memory/
+/.codex/
+/.agents/
+
 # Editor / OS
 .vscode/
 .idea/
