@@ -1,29 +1,68 @@
-# Bulk data. The working tree this was packaged from is ~550 GB; none of it belongs in git.
-datasets/
-!datasets/
-!datasets/README.md
-output/
-pix2pixHD/checkpoints/
-pix2pixHD/results/
+# Bulk assets: distribute through the links in docs/ASSET_DOWNLOADS.md.
+# Keep only top-level dataset documentation, not recordings or corpus metadata.
+/datasets/*
+!/datasets/*.md
+/output/
+/pix2pixHD/checkpoints/
+/pix2pixHD/results/
+
+# Media and model artifacts accidentally written outside the asset directories.
 *.mp4
 *.avi
+*.mov
+*.mkv
 *.png
 *.jpg
 *.jpeg
 *.pth
 *.pt
+*.ckpt
+*.safetensors
+*.onnx
+*.engine
 *.npy
 *.npz
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
 
-# Local state
+# Small documentation illustrations are versioned here; bulk images stay in datasets/.
+!/docs/assets/**/*.png
+!/docs/assets/**/*.jpg
+!/docs/assets/**/*.jpeg
+
+# Python environments, caches, and build artifacts.
 __pycache__/
-*.pyc
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+/build/
+/dist/
+
+# Local logs, downloads in progress, and machine-specific configuration.
 *.log
 *_log.txt
+*.part
+*.crdownload
 .env
+.env.*
+!.env.example
 config.local.sh
+/tmp/
+/logs/
 
 # Editor / OS
 .vscode/
 .idea/
 .DS_Store
+Thumbs.db
+Desktop.ini

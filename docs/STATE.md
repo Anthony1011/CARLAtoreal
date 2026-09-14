@@ -1,3 +1,5 @@
+> Layout update (2026-09-14): historical commands below retain their original paths. See [REORGANIZATION.md](REORGANIZATION.md) for current entry points and the file mapping.
+
 # WHERE WE ARE — 2026-09-01
 
 Read this first after any context loss. Companion to `EXPERIMENTS.md` (26 numbered findings).

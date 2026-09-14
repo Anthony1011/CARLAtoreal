@@ -1,3 +1,5 @@
+> Layout update (2026-09-14): historical commands below retain their original paths. See [REORGANIZATION.md](REORGANIZATION.md) for current entry points and the file mapping.
+
 # Project Summary: CARLA Sim-to-Real Image Translation
 
 > Last updated: 2026-06-23
