@@ -172,8 +172,11 @@ Two baselines, chosen by eye on side-by-side comparison rather than by metric:
 
 | Condition | Baseline | How to produce |
 |---|---|---|
-| Sunny | **v75** (since 2026-09-11) | `TEXTURE=1 bash scripts/inference/render_model.sh sunny carla2real_semantic_v75_pz_tex v75 <Town...>`, **then** `BASE_TAG=v75 COLOUR_SRC=v50m make_v50r.sh` |
-| Night | **v76** (since 2026-09-11) | `bash scripts/inference/render_model.sh night carla2real_semantic_v76_pz_night v76 <Town...>` |
+| Sunny | **v75q** (since 2026-09-15) | `TEXTURE=1 bash scripts/inference/render_model.sh sunny carla2real_semantic_v75_pz_tex v75 <Town...>`, **then** `TAG=v75q BASE_TAG=v75 COLOUR_SRC=v50m make_v50r.sh` |
+| Night | **v79** (since 2026-09-15) | `bash scripts/inference/render_model.sh night carla2real_semantic_v79_clean_night v79 <Town...>` |
+
+v75q is the v75 render put through the sunny delivery chain below; the two are the same weights.
+v79 replaces v76 on the same night corpus minus Dark Zurich — see the licence table further down.
 
 **Sunny needs the second step.** `scripts/inference/render_model.sh` is the evaluation chain — it renders, stabilises
 and applies the protection passes, which is enough to score a model but is *not* the full sunny
@@ -190,13 +193,20 @@ corpus does not show the vehicle-repaint behaviour to the same degree.
 
 **Both baselines are trained only on openly licensed data** — PandaSet (CC BY 4.0) and the Zenseact
 Open Dataset (CC BY-SA 4.0), alongside Mapillary Vistas and Cityscapes. The 21 videos of
-unestablished provenance that earlier models were trained on are gone from both corpora. See
+unestablished provenance that earlier models were trained on are gone from both corpora.
+
+**Night (v79) is the stricter of the two.** Its corpus is PandaSet and ZOD and nothing else: Dark
+Zurich, which is licensed for academic research only and was 21% of the night data in v76, is gone,
+verified at zero frames. Removing it cost nothing — ZOD night more than replaced it, and the clean
+corpus is larger (14,674 pairs against 12,546). Sunny (v75q) still draws 56% of its corpus from
+Mapillary Vistas and Cityscapes, both of which are free for research but not for commercial use, so
+only the night model is clean for a commercial reader. See
 `datasets/README.md` for what to download and `THIRD_PARTY_NOTICES.md` for what each licence
 requires.
 
 **ZOD is share-alike, and that reaches the weights.** ZOD's CC BY-SA 4.0 requires derivative works
 to carry the same licence. Whether trained weights are a derivative of their training data is
-unsettled, but anyone publishing weights from these two models should assume they are and licence
+unsettled, but anyone publishing v75q or v79 weights should assume they are and licence
 them CC BY-SA 4.0. The code in this repository is unaffected and remains Apache-2.0. If you need
 weights without that question, `v73` (sunny) and `v69` (night) are trained on PandaSet only — CC BY
 4.0, no share-alike — and score within half a CIPO point of the baselines.
@@ -205,13 +215,20 @@ weights without that question, `v73` (sunny) and `v69` (night) are trained on Pa
 
 Measured against the previous baselines on Vision Pilot, same towns, like for like:
 
-| | previous | new | CIPO |
+| | previous | new | CIPO, five towns |
 |---|---|---|---|
-| Night | v59 | **v76** | **+3.3 pts** — better on both towns individually |
-| Sunny | v50m | **v75** | −0.5 pts, at roughly half the false-alarm rate |
+| Night | v59 | **v79** | **+2.3 pts**, with the best lane MAE and jitter in the project |
+| Sunny | v50m | **v75q** | −1.0 pts, at roughly 15% fewer false alarms |
 
-Night is a straight improvement. Sunny trades about half a point of recall for a clean licence and
-a much lower false-alarm rate, and was chosen on the side-by-side rather than on the number.
+Night is a straight improvement. Sunny trades a point of recall for a clean licence and a lower
+false-alarm rate, and was chosen on the side-by-side rather than on the number.
+
+**That sunny point is the cost of the licence, and it does not close.** Both available levers were
+tested and rejected: dropping the roughness prior gives 24% more detail but fails the road gate at
+1.53 and costs 3.3 CIPO, and the delivery chain cannot rescue it because the road grain and the
+useful detail are the same signal; and tripling the ZOD share moves perception not at all (−1.1).
+Sunny is not data-limited. Earlier revisions of this file quoted −0.5, which was a two-town reading
+taken before the remaining three towns had been scored.
 
 The image metrics are where the ZOD run paid off. Fine-tuning on a corpus dominated by one source
 drifts tone badly — v73, PandaSet only, comes out at −34.0 on cars and +38.3 on road. Adding a
