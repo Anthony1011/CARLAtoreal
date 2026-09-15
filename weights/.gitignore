@@ -1,0 +1,4 @@
+# The weights themselves are published as release assets, not committed.
+# See weights/README.md. Remove these two lines if you switch to Git LFS.
+*.pth
+!README.md

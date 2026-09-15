@@ -1,0 +1,31 @@
+Trained model weights in this directory are licensed under the
+
+    Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+
+Full text: https://creativecommons.org/licenses/by-sa/4.0/legalcode
+
+This is NOT the licence of the code in this repository. The code is Apache-2.0; see ../LICENSE.
+
+Why the weights differ from the code
+------------------------------------
+These weights are trained in part on the Zenseact Open Dataset, which is released under
+CC BY-SA 4.0. Share-alike propagates to derivative works. Whether trained model weights are a
+derivative work of their training data is legally unsettled and has not been decided by a court.
+This project takes the conservative reading: the weights are licensed share-alike, matching the
+strictest licence of any corpus they were trained on.
+
+If you need weights without that condition, the v73 (sunny) and v69 (night) checkpoints train on
+PandaSet only, which is CC BY 4.0 with no share-alike, and score within half a CIPO point of these
+baselines.
+
+Attribution required by the training corpora
+--------------------------------------------
+PandaSet (c) Scale AI, Inc. and Hesai Technology Co., Ltd. - CC BY 4.0 plus Dataset Terms.
+  The Dataset Terms carry into derived data: attribute Scale AI and Hesai; do not use their names
+  or logos beyond attribution; do not use the data to identify any individual.
+Zenseact Open Dataset (c) Zenseact AB - CC BY-SA 4.0.
+Mapillary Vistas (c) Mapillary AB - research use.
+Cityscapes (c) Daimler AG, MPI Informatics, TU Darmstadt - research use.
+
+Mapillary Vistas and Cityscapes are licensed for research use and are part of the SUNNY corpus
+only. The night model (v79) is trained on PandaSet and ZOD alone.
