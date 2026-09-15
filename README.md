@@ -157,7 +157,7 @@ packaged from is ~550 GB; the repository is under 1 MB. A clone will not run unt
 
 | Missing | Why | How to get it |
 |---|---|---|
-| Trained weights | ~200 MB per model, and derived from licensed training footage | Train it yourself — `experiments/training/train_v50.sh` is the sunny baseline recipe and `experiments/training/train_v51_night.sh` the night one; `experiments/training/train_v63_veg.sh` / `experiments/training/train_v64_veg.sh` are shipped as worked *negative* results. Or request the weights separately. |
+| Trained weights | **700 MB** per model (`latest_net_G.pth`, 183.5M fp32 params; the discriminator adds 33 MB and is only needed to resume training), and derived from licensed training footage | Train it yourself — `experiments/training/train_v50.sh` is the sunny baseline recipe and `experiments/training/train_v51_night.sh` the night one; `experiments/training/train_v63_veg.sh` / `experiments/training/train_v64_veg.sh` are shipped as worked *negative* results. Or request the weights separately. |
 | Training corpus | Real driving footage, licensed separately | Not redistributable here — see `THIRD_PARTY_NOTICES.md` |
 | CARLA 0.9.16 | Records the drives | carla.org |
 | MoGe, DVP, Real-ESRGAN | Depth/normal channels, optional temporal and upscale stages | Upstream projects |
