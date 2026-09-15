@@ -1,0 +1,2 @@
+# Shell workflows are executed by Bash, including after a Windows checkout.
+*.sh text eol=lf

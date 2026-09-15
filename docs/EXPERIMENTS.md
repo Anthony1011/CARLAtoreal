@@ -1,3 +1,5 @@
+> Layout update (2026-09-14): historical commands below retain their original paths. See [REORGANIZATION.md](REORGANIZATION.md) for current entry points and the file mapping.
+
 # Slack-time experiments, 2026-08-20 onward
 
 Running record of what was added while the main 72-hour queue ran, so nothing has to be

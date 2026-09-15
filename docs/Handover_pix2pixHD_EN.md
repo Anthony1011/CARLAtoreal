@@ -1,3 +1,5 @@
+> Layout update (2026-09-14): historical commands below retain their original paths. See [REORGANIZATION.md](REORGANIZATION.md) for current entry points and the file mapping.
+
 # Handover Document — CARLA sim-to-real pix2pixHD Pipeline
 
 > **Date written:** 2026-06-22 (last updated: 2026-06-25)

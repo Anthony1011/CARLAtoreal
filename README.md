@@ -14,14 +14,25 @@ what stops the generator inventing a different world every frame.
 ## Layout
 
 ```
-config.sh / config.py     every path the pipeline uses, overridable by environment variable
-pix2pixHD/                the modified pix2pixHD fork (source only)
-docs/                     design notes, handover, and the experiment log
-*.py / *.sh               pipeline stages and measurement tools (see below)
+carla2real/               recording, preprocessing, postprocessing, evaluation and common Python code
+configs/config.sh        shell environment and repository root discovery
+carla2real/config.py      Python path configuration
+scripts/                 preprocessing, training, inference and delivery shell entry points
+experiments/             version-specific training and delivery recipes
+pix2pixHD/               modified model core; checkpoint and result locations are unchanged
+datasets/ / output/      local assets and delivered clips (Git-ignored)
+docs/ / notes/           guides, experiment history and project progress
 ```
 
 Bulk data is deliberately outside the repository. Set `CARLA2REAL_DATA` and `CARLA2REAL_OUT`, or
 accept the defaults of `./datasets` and `./output`.
+
+Run Python tools from the repository root with `python3 -m carla2real.<group>.<module>`.
+Shell drivers locate `configs/config.sh` relative to themselves; it exposes the package through
+`PYTHONPATH` even when a driver changes working directory. Old root-level script paths have moved;
+see [the migration guide](docs/REORGANIZATION.md) for the complete mapping and known missing helpers.
+Create empty asset directories with `python3 scripts/init_asset_dirs.py`; download placeholders
+and extraction locations are in [the asset guide](docs/ASSET_DOWNLOADS.md).
 
 ## The idea that shapes the design
 
@@ -36,12 +47,13 @@ synthetic video useless for perception testing. Depth, normals and edges pin the
 
 ## Pipeline
 
-**1. Record.** `record_town_auto.py --town Town05 --weather sunny --outname Town05_sunny_inst`
+**1. Record.** `python3 -m carla2real.recording.record_town_auto --town Town05 --weather sunny --outname Town05_sunny_inst`
 drives CARLA on autopilot and captures RGB plus the semantic camera to
 `$CARLA2REAL_DATA/recorded_<outname>/`. NPCs are spawned near the ego rather than scattered over
 the whole map — a map-wide shuffle put 150 vehicles somewhere the ego never drove and yielded one
-visible car per frame. `prepare_gt_test_label.py` converts CARLA's semantic images to the
-trainId label maps the generator reads.
+visible car per frame. `carla2real/preprocessing/legacy/prepare_gt_test_label.py` is the older
+Town03/19-class conversion, not the current 65-class preprocessing chain. That chain remains
+incomplete in this checkout; see [the inference inventory](docs/INFERENCE_FLOW.md).
 
 CARLA writes BGRA; slicing `[:, :, :3]` yields BGR-as-RGB, so the channel order must be reversed
 before use. Getting this wrong is silent — the image looks plausible, just wrong.
@@ -49,7 +61,7 @@ before use. Getting this wrong is silent — the image looks plausible, just wro
 **2. Build conditioning channels.** Label map, instance-merged edges, monocular depth and normals,
 plus chroma (day) or light (night).
 
-**3. Render.** `render_model.sh <sunny|night> <model> <tag> <Town...>` runs the generator over a
+**3. Render.** `scripts/inference/render_model.sh <sunny|night> <model> <tag> <Town...>` runs the generator over a
 town and then the delivery chain, writing `<town>_<weather>_<tag>_FINAL_1920.mp4`.
 
 **4. Deliver.** Stages that repair what the generator gets wrong, each guarded so it cannot make
@@ -57,16 +69,16 @@ things worse:
 
 | Stage | What it fixes |
 |---|---|
-| `protect_traffic_lights_carla.py` | Composites CARLA's own lights back in, so signal state is always correct rather than a plausible-looking invention. |
-| `protect_lane_markings.py` | Restores lane paint contrast to the range real paint occupies. |
-| `protect_vehicle_colour.py` | Stops an invented warm cast on vehicles. Guarded: when the reference surface is near-neutral, hue is never adopted from it — on a grey surface the measured hue is decided by sensor noise, and adopting it turned a red bus magenta. |
-| `protect_buildings.py` | Injects CARLA's real facade structure. Applied per region and kept only where measured detail actually increases. |
-| `class_deshimmer.py` | Per-class temporal smoothing. Strength and motion tolerance vary by class, because a global filter smooths the stationary road (already stable) while missing buildings that sweep past the camera. |
-| `despeckle_night.py` | Removes isolated colourless bright blobs. Lamps and signals fail all three tests and survive. |
-| `fuse_colour.py` | Transfers one render's colour onto another's frames. Built because the two properties are separable: stability is temporal, vibrancy is per-frame colour. The transfer statistics are smoothed over a temporal window first, so only the slow colour trend crosses over and none of the source's frame-to-frame jitter. |
+| `carla2real/postprocessing/protect_traffic_lights_carla.py` | Composites CARLA's own lights back in, so signal state is always correct rather than a plausible-looking invention. |
+| `carla2real/postprocessing/protect_lane_markings.py` | Restores lane paint contrast to the range real paint occupies. |
+| `carla2real/postprocessing/protect_vehicle_colour.py` | Stops an invented warm cast on vehicles. Guarded: when the reference surface is near-neutral, hue is never adopted from it — on a grey surface the measured hue is decided by sensor noise, and adopting it turned a red bus magenta. |
+| `carla2real/postprocessing/protect_buildings.py` | Injects CARLA's real facade structure. Applied per region and kept only where measured detail actually increases. |
+| `carla2real/postprocessing/class_deshimmer.py` | Per-class temporal smoothing. Strength and motion tolerance vary by class, because a global filter smooths the stationary road (already stable) while missing buildings that sweep past the camera. |
+| `carla2real/postprocessing/despeckle_night.py` | Removes isolated colourless bright blobs. Lamps and signals fail all three tests and survive. |
+| `carla2real/postprocessing/fuse_colour.py` | Transfers one render's colour onto another's frames. Built because the two properties are separable: stability is temporal, vibrancy is per-frame colour. The transfer statistics are smoothed over a temporal window first, so only the slow colour trend crosses over and none of the source's frame-to-frame jitter. |
 
-**5. Measure.** `veg_report.py`, `tail_check.py`, `road_texture.py`, `true_instability.py`,
-`epoch_sweep.py`, `flicker_report.py`, and `score_vp.py` for end-to-end perception scoring against
+**5. Measure.** `carla2real/evaluation/veg_report.py`, `carla2real/evaluation/tail_check.py`, `carla2real/evaluation/road_texture.py`, `carla2real/evaluation/true_instability.py`,
+`carla2real/evaluation/epoch_sweep.py`, `carla2real/evaluation/flicker_report.py`, and `carla2real/evaluation/score_vp.py` for end-to-end perception scoring against
 an external stack (optional; set `PERCEPTION_ROOT`).
 
 ## A warning about metrics
@@ -78,14 +90,14 @@ every flat surface scored *better* on both than the model it replaced.
 
 So the tools here are built to be falsifiable rather than flattering:
 
-- `road_texture.py` asks whether there is detail where the label map says there should be none,
+- `carla2real/evaluation/road_texture.py` asks whether there is detail where the label map says there should be none,
   instead of asking whether there is detail.
-- `veg_report.py` reports near and far detail separately and refuses to average them, because
+- `carla2real/evaluation/veg_report.py` reports near and far detail separately and refuses to average them, because
   raising near detail while distant trees stay bad is not a fix.
-- `true_instability.py` separates real instability from detail in motion using optical flow.
-- `road_sky_ceiling.py` compares against real photographs, not against the previous model, because
+- `carla2real/evaluation/true_instability.py` separates real instability from detail in motion using optical flow.
+- `carla2real/evaluation/road_sky_ceiling.py` compares against real photographs, not against the previous model, because
   a comparison to the parent tells you a change is new, not that it is an improvement.
-- `true_instability.py` is the one to use for any stability claim across versions of differing
+- `carla2real/evaluation/true_instability.py` is the one to use for any stability claim across versions of differing
   sharpness. The plain alternation metric counts a stationary detailed surface sweeping past a
   moving camera as flicker, and has already sent this project chasing a regression that was 1%.
 
@@ -107,22 +119,22 @@ PyTorch 2.11 on CUDA 12.8, OpenCV 4.13. CARLA 0.9.16 is needed only for recordin
 package version must match the running server exactly.
 
 A CUDA GPU is required. A 2048-wide render peaks around 27 GB of VRAM, so run one GPU job at a time;
-`gpu_wait.sh` exists to serialise them.
+`scripts/common/gpu_wait.sh` exists to serialise them.
 
 ## First run
 
 ```bash
 git clone <this repo> && cd carla2real
 pip install -r requirements.txt
-cp config.sh config.local.sh          # then edit the paths, or export them in your shell
-. ./config.sh
+source configs/config.sh
+python3 scripts/init_asset_dirs.py
 
 # A. render from an existing recording (needs weights in pix2pixHD/checkpoints/<model>/)
-./render_model.sh sunny carla2real_semantic_v50_graft v50 Town05
+bash scripts/inference/render_model.sh sunny carla2real_semantic_v50_graft v50 Town05
 
 # B. or record your own first (needs a CARLA server on localhost:2000)
-python3 record_town_auto.py --town Town05 --weather sunny --outname Town05_sunny_inst
-python3 prepare_gt_test_label.py
+python3 -m carla2real.recording.record_town_auto --town Town05 --weather sunny --outname Town05_sunny_inst
+# Prepare matching 65-class inference channels separately (see docs/INFERENCE_FLOW.md).
 ```
 
 Nothing here downloads weights or data. See the table below for what you must supply.
@@ -145,32 +157,35 @@ packaged from is ~550 GB; the repository is under 1 MB. A clone will not run unt
 
 | Missing | Why | How to get it |
 |---|---|---|
-| Trained weights | ~200 MB per model, and derived from licensed training footage | Train it yourself — `train_v50.sh` is the sunny baseline recipe and `train_v51_night.sh` the night one; `train_v63_veg.sh` / `train_v64_veg.sh` are shipped as worked *negative* results. Or request the weights separately. |
+| Trained weights | ~200 MB per model, and derived from licensed training footage | Train it yourself — `experiments/training/train_v50.sh` is the sunny baseline recipe and `experiments/training/train_v51_night.sh` the night one; `experiments/training/train_v63_veg.sh` / `experiments/training/train_v64_veg.sh` are shipped as worked *negative* results. Or request the weights separately. |
 | Training corpus | Real driving footage, licensed separately | Not redistributable here — see `THIRD_PARTY_NOTICES.md` |
 | CARLA 0.9.16 | Records the drives | carla.org |
 | MoGe, DVP, Real-ESRGAN | Depth/normal channels, optional temporal and upscale stages | Upstream projects |
-| Perception stack (optional) | Only for `score_vp.py` scoring | Not part of this project; set `PERCEPTION_ROOT` |
+| Perception stack (optional) | Only for `carla2real/evaluation/score_vp.py` scoring | Not part of this project; set `PERCEPTION_ROOT` |
 
 ## Which version does what
+
+These are the documented baseline recipes, not verified runnable commands for this checkout.
+The v75 texture input and `make_v50r.sh` are missing; see [known gaps](docs/INFERENCE_FLOW.md).
 
 Two baselines, chosen by eye on side-by-side comparison rather than by metric:
 
 | Condition | Baseline | How to produce |
 |---|---|---|
-| Sunny | **v75** (since 2026-09-11) | `TEXTURE=1 render_model.sh sunny carla2real_semantic_v75_pz_tex v75 <Town...>`, **then** `BASE_TAG=v75 COLOUR_SRC=v50m make_v50r.sh` |
-| Night | **v76** (since 2026-09-11) | `render_model.sh night carla2real_semantic_v76_pz_night v76 <Town...>` |
+| Sunny | **v75** (since 2026-09-11) | `TEXTURE=1 bash scripts/inference/render_model.sh sunny carla2real_semantic_v75_pz_tex v75 <Town...>`, **then** `BASE_TAG=v75 COLOUR_SRC=v50m make_v50r.sh` |
+| Night | **v76** (since 2026-09-11) | `bash scripts/inference/render_model.sh night carla2real_semantic_v76_pz_night v76 <Town...>` |
 
-**Sunny needs the second step.** `render_model.sh` is the evaluation chain — it renders, stabilises
+**Sunny needs the second step.** `scripts/inference/render_model.sh` is the evaluation chain — it renders, stabilises
 and applies the protection passes, which is enough to score a model but is *not* the full sunny
 delivery. Three stages only the delivery chain runs, and the artefact each one removes:
 
 | stage | without it |
 |---|---|
-| `protect_vehicle_colour.py` | the generator repaints vehicles per frame, so a car cycles through colours as it drives. The fix takes hue and saturation from CARLA — identical every frame — and keeps the render's own luminance. |
-| `protect_buildings.py` | facades are invented from a label that says only "building", differently each frame. That reinvention *is* the building shimmer; injecting CARLA's real window grids stops it and raises facade detail. |
-| `class_deshimmer.py` | vehicle shadows and contact areas break up frame to frame. Cars want strength 0.55 at flow tolerance 4.5 — looser trails, tighter flickers. |
+| `carla2real/postprocessing/protect_vehicle_colour.py` | the generator repaints vehicles per frame, so a car cycles through colours as it drives. The fix takes hue and saturation from CARLA — identical every frame — and keeps the render's own luminance. |
+| `carla2real/postprocessing/protect_buildings.py` | facades are invented from a label that says only "building", differently each frame. That reinvention *is* the building shimmer; injecting CARLA's real window grids stops it and raises facade detail. |
+| `carla2real/postprocessing/class_deshimmer.py` | vehicle shadows and contact areas break up frame to frame. Cars want strength 0.55 at flow tolerance 4.5 — looser trails, tighter flickers. |
 
-Night does not need it: `render_model.sh` composites CARLA's lamp pools back in, and the night
+Night does not need it: `scripts/inference/render_model.sh` composites CARLA's lamp pools back in, and the night
 corpus does not show the vehicle-repaint behaviour to the same degree.
 
 **Both baselines are trained only on openly licensed data** — PandaSet (CC BY 4.0) and the Zenseact
@@ -206,9 +221,9 @@ the corpus had moved it; a second source did.
 
 ### The previous sunny baseline, for reference
 
-**v50m was not a trained model, and that was the point.** `make_v50m.sh` renders with `v50_graft`,
+**v50m was not a trained model, and that was the point.** `experiments/delivery/make_v50m.sh` renders with `v50_graft`,
 repairs it through the delivery chain, then grades it with colour lifted from a `v63` render of the
-same town by `fuse_colour.py`. Reproducing it needs both renders, frame-aligned. It is kept because
+same town by `carla2real/postprocessing/fuse_colour.py`. Reproducing it needs both renders, frame-aligned. It is kept because
 the delivery chain it established is the one v75 and v76 still run through.
 
 v50m is v50l plus three fixes, each aimed at a defect found by watching the clips:
@@ -230,11 +245,11 @@ so the two are separable and no retrain was needed. `docs/EXPERIMENTS.md` notes 
 Earlier chains are kept because they are the lineage, and because each carries a fix the one
 before it predates:
 
-- `make_v50d.sh` — the previous sunny baseline. Predates the vehicle-colour and building fixes.
-- `make_v50i.sh` / `make_v50j.sh` — the vehicle-colour achromatic guard and the per-region
+- `experiments/delivery/make_v50d.sh` — the previous sunny baseline. Predates the vehicle-colour and building fixes.
+- `experiments/delivery/make_v50i.sh` / `experiments/delivery/make_v50j.sh` — the vehicle-colour achromatic guard and the per-region
   building-structure injection. `v50j` is the carrier both `v50l` and `v50m` are built on.
-- `make_v50kl.sh` — the first fusion, producing `v50l` (and `v50k`, which is closed).
-- `make_v51d.sh` — night, with per-class de-shimmer and despeckle.
+- `experiments/delivery/make_v50kl.sh` — the first fusion, producing `v50l` (and `v50k`, which is closed).
+- `experiments/delivery/make_v51d.sh` — night, with per-class de-shimmer and despeckle.
 
 Do not apply the grade to `v50d` (that combination is `v50k`, and it is closed): a global grade
 amplifies a per-object hue error instead of fixing it, so v50d's magenta bus came out worse. The
