@@ -172,11 +172,38 @@ Two baselines, chosen by eye on side-by-side comparison rather than by metric:
 
 | Condition | Baseline | How to produce |
 |---|---|---|
-| Sunny | **v75q** (since 2026-09-15) | `TEXTURE=1 bash scripts/inference/render_model.sh sunny carla2real_semantic_v75_pz_tex v75 <Town...>`, **then** `TAG=v75q BASE_TAG=v75 COLOUR_SRC=v50m make_v50r.sh` |
+| Sunny | **v85d** (since 2026-09-22) | `TEXTURE=1 bash scripts/inference/render_model.sh sunny carla2real_semantic_v85_zod_fixed v85 <Town...>`, **then** `TAG=v85q BASE_TAG=v85 COLOUR_SRC=v50m make_v50r.sh`, **then** `deepen_road_shadows.py` |
 | Night | **v79** (since 2026-09-15) | `bash scripts/inference/render_model.sh night carla2real_semantic_v79_clean_night v79 <Town...>` |
 
-v75q is the v75 render put through the sunny delivery chain below; the two are the same weights.
-v79 replaces v76 on the same night corpus minus Dark Zurich — see the licence table further down.
+**Sunny is now fully licensed too.** v85 trains on PandaSet and ZOD alone — no Mapillary Vistas, no
+Cityscapes. Both baselines are free of research-only data as of 2026-09-22.
+
+Two things got it there, and neither was more data:
+
+**ZOD was fixed rather than avoided.** Measured per source at a common width, ZOD carries detail
+2.71 and saturation 37.1 against PandaSet's 5.57 / 42.7 and Mapillary's 5.43 / 61.8. A corpus
+without Mapillary is three quarters ZOD, and the first attempt at one (v81) lost 41% of its detail
+and was rejected on sight. `fix_zod_appearance.py` sharpens ZOD with a **clamped** unsharp — every
+pixel clamped to the local min/max of the input, so overshoot is impossible by construction —
+reaching detail 4.92 at **0.00% halo**, where a plain unsharp mask that strong rings on 26% of edge
+pixels. A generator trained on ringing learns to paint ringing.
+
+**Road shadows are a post-pass, not a training problem.** Measured on road pixels as the darkest
+twentieth over the median (lower = deeper):
+
+| | road shadow depth |
+|---|---|
+| CARLA source | 0.542 |
+| v50m, the old unlicensed baseline | **0.269** |
+| v85 raw render | 0.659 |
+| v85q, full delivery chain | 0.630 |
+| **v85d** = v85q + `deepen_road_shadows.py` | **0.306** |
+
+The raw render and the full chain differ by 0.03, so no corpus change could have fixed this: the
+sun's position is not in the label map. It *is* in CARLA, which has the geometry and the light.
+`deepen_road_shadows.py` transfers CARLA's ground-shadow shape onto road and sidewalk as a
+luminance ratio only — the render keeps its own colour, grain and exposure — at 2.5x CARLA's own
+depth, because CARLA's rendered shadows are themselves half as deep as a real one.
 
 **Sunny needs the second step.** `scripts/inference/render_model.sh` is the evaluation chain — it renders, stabilises
 and applies the protection passes, which is enough to score a model but is *not* the full sunny
@@ -218,17 +245,21 @@ Measured against the previous baselines on Vision Pilot, same towns, like for li
 | | previous | new | CIPO, five towns |
 |---|---|---|---|
 | Night | v59 | **v79** | **+2.3 pts**, with the best lane MAE and jitter in the project |
-| Sunny | v50m | **v75q** | −1.0 pts, at roughly 15% fewer false alarms |
+| Sunny | v50m | **v85d** | **+1.5 pts** — the best in the project, on fully licensed data |
 
 Night is a straight improvement. Sunny trades a point of recall for a clean licence and a lower
 false-alarm rate, and was chosen on the side-by-side rather than on the number.
 
-**That sunny point is the cost of the licence, and it does not close.** Both available levers were
-tested and rejected: dropping the roughness prior gives 24% more detail but fails the road gate at
-1.53 and costs 3.3 CIPO, and the delivery chain cannot rescue it because the road grain and the
-useful detail are the same signal; and tripling the ZOD share moves perception not at all (−1.1).
-Sunny is not data-limited. Earlier revisions of this file quoted −0.5, which was a two-town reading
-taken before the remaining three towns had been scored.
+**Sunny no longer costs anything for its licence.** Earlier revisions of this file said the deficit
+was intrinsic to dropping the unlicensed footage. That was wrong twice over: the loss came from what
+*replaced* it (a corpus three quarters ZOD), and the remaining visual gap was a post-pass away, not
+a training problem. Both were found by measuring per source and per class rather than by trusting
+the perception score — see the note below.
+
+**CIPO recall is not a proxy for visual fidelity.** v81q scored +0.5 against v50m — better than any
+sunny model before it — while carrying 41% less detail, and was rejected at a glance. The
+perception stack wants a vehicle that separates cleanly from the road, and a soft flat render gives
+it one. Report `experiments/report_experiments.py` and per-class sharpness first; read CIPO second.
 
 The image metrics are where the ZOD run paid off. Fine-tuning on a corpus dominated by one source
 drifts tone badly — v73, PandaSet only, comes out at −34.0 on cars and +38.3 on road. Adding a
