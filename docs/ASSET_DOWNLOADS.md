@@ -1,70 +1,103 @@
-# 影像、權重與輸出位置
+# Images, weights and output locations
 
-更新日期：2026-09-14。所有專案資產下載點目前均為 **待上傳**。下列欄位是發布準備，不代表資產已提供或已驗證；上傳後直接將「待填」替換為下載連結。
+Updated 2026-09-14. Every project asset download link is currently **pending upload**. The fields
+below are release preparation; they do not mean an asset has been provided or verified. Once
+uploaded, replace "pending" with the download link.
 
-## 建立資料夾
+> English translation of `docs/zh/ASSET_DOWNLOADS.zh.md`, which remains the original.
+>
+> **Some of this is now out of date.** The baselines are v85d (sunny) and v79 (night) as of
+> 2026-09-22, not v75/v76, and weights are published as GitHub release assets — see
+> [`weights/README.md`](../weights/README.md). The structure and the caveats below still hold.
 
-在 repository 根目錄執行（Windows 可用 `python`，Linux 可用 `python3`）：
+## Creating the directories
+
+Run from the repository root (`python` on Windows, `python3` on Linux):
 
 ```bash
 python scripts/init_asset_dirs.py
 ```
 
-此命令只建立不存在的資料夾，不下載資料、不建立假權重、不覆蓋檔案。空資料夾不會隨 Git 保存，因此新 clone 後需執行一次。本次僅建立共用根目錄；場景、model、tag 未確定前不預先填入。
+This only creates directories that do not exist. It downloads nothing, creates no placeholder
+weights, and overwrites no files. Git does not preserve empty directories, so it has to be run once
+after a fresh clone. Only the shared roots are created here; scene, model and tag directories are
+not pre-populated while those are still undecided.
 
 ```text
 datasets/
-└── training_v12_mapillary/       推論條件圖
+└── training_v12_mapillary/      inference conditioning maps
 pix2pixHD/
-├── checkpoints/                 模型權重
+├── checkpoints/                 model weights
 └── results/mp4/
-    ├── vision_pilot/            render 的影片產物
-    └── NEW/                     scripts/delivery/refresh_new.sh 整理的交付索引
-output/                          最終交付影片
-├── vp_input_1024/               外部感知用縮小影片
-├── calibrated/                 外部感知輸出影片
-└── gt/                         評分用 GT JSON（不是模型輸入）
+    ├── vision_pilot/            video output from render
+    └── NEW/                     delivery index assembled by scripts/delivery/refresh_new.sh
+output/                          final delivered video
+├── vp_input_1024/               downscaled video for the external perception stack
+├── calibrated/                  perception stack output video
+└── gt/                          ground-truth JSON for scoring (not a model input)
 ```
 
-確認要使用的場景後可建立對應子目錄，例如：
+Once the scene is decided, the matching subdirectories can be created, for example:
 
 ```bash
 python scripts/init_asset_dirs.py --town Town05 --weather sunny
 ```
 
-這是命名範例，不表示 Town05 是已選定的驗證資料。它建立 `datasets/recorded_Town05_sunny_inst/{rgb,semantic}/`，以及 `datasets/training_v12_mapillary/test_Town05_sunny_inst_gt_{label,edge,depth,normal,chroma,label_rich}/`。夜間改用 `--weather night`，chroma 改為 light。`label_rich` 供後處理使用。
+This is a naming example; it does not mean Town05 is the chosen validation data. It creates
+`datasets/recorded_Town05_sunny_inst/{rgb,semantic}/` and
+`datasets/training_v12_mapillary/test_Town05_sunny_inst_gt_{label,edge,depth,normal,chroma,label_rich}/`.
+For night use `--weather night`, where chroma is replaced by light. `label_rich` is used by
+post-processing.
 
-權重目錄用 `--model MODEL_NAME` 建立；MODEL_NAME 須換成已確認的真實模型名稱。上述選項可合併使用。instance 目錄由 recorder 在 `--instance` 啟用時建立；texture 支援尚未接通，見推論流程 Q3。
+Weight directories are created with `--model MODEL_NAME`, where MODEL_NAME must be a real,
+confirmed model name. The options above can be combined. The instance directory is created by the
+recorder only when `--instance` is enabled. Texture support is not yet wired through — see Q3 in
+the inference flow document.
 
-本工具刻意對應目前 render 的 repository 預設路徑，不讀取自訂 CARLA2REAL_DATA／CARLA2REAL_OUT。若要使用外部磁碟，須先處理 render 硬編 `ROOT/datasets` 的落差。
+This tool deliberately matches the repository paths that render currently defaults to. It does not
+read a custom `CARLA2REAL_DATA` or `CARLA2REAL_OUT`. Using an external disk first requires
+resolving the fact that render hard-codes `ROOT/datasets`.
 
-## 下載清單
+## Download list
 
-所有位置相對於 repository 根目錄。`NAME`、`PHS`、`MODEL` 是格式變數，不是要建立的字面資料夾名稱。
+All locations are relative to the repository root. `NAME`, `PHS` and `MODEL` are format variables,
+not literal directory names to create.
 
-| 資產 | 下載連結（上傳後替換） | 放置位置／內容 | 版本、大小、SHA-256 |
+| Asset | Download link (replace once uploaded) | Location / contents | Version, size, SHA-256 |
 |---|---|---|---|
-| CARLA 錄製影像包 | 待填 | `datasets/recorded_NAME/`；內含 `rgb/`、`semantic/`、`frame_speed.txt`，有錄製 instance 時才附 `instance/` | 待確認 |
-| 預先產生的推論條件圖包 | 待填 | `datasets/training_v12_mapillary/PHS_*`；label、edge、depth、normal、chroma（日）或 light（夜），及後處理 label_rich | 待確認 |
-| 晴天 Generator 權重 | 待填 | `pix2pixHD/checkpoints/MODEL/latest_net_G.pth` | MODEL、版本與相容旗標待確認 |
-| 夜間 Generator 權重 | 待填 | `pix2pixHD/checkpoints/MODEL/latest_net_G.pth` | MODEL、版本與相容旗標待確認 |
-| 範例輸出影片（供比對） | 待填 | `output/`；應附產生時的命令、模型與場景資訊 | 待確認 |
-| 感知評分 GT（若提供） | 待填 | `output/gt/<town小寫>_<weather>_gt.json` | 待確認 |
+| CARLA recording image pack | pending | `datasets/recorded_NAME/`, containing `rgb/`, `semantic/`, `frame_speed.txt`, and `instance/` only when instances were recorded | to be confirmed |
+| Pre-generated inference conditioning maps | pending | `datasets/training_v12_mapillary/PHS_*`: label, edge, depth, normal, and chroma (day) or light (night), plus label_rich for post-processing | to be confirmed |
+| Sunny generator weights | pending | `pix2pixHD/checkpoints/MODEL/latest_net_G.pth` | MODEL, version and compatibility flags to be confirmed |
+| Night generator weights | pending | `pix2pixHD/checkpoints/MODEL/latest_net_G.pth` | MODEL, version and compatibility flags to be confirmed |
+| Sample output video (for comparison) | pending | `output/`; should come with the command, model and scene used to produce it | to be confirmed |
+| Perception scoring ground truth (if provided) | pending | `output/gt/<town lowercase>_<weather>_gt.json` | to be confirmed |
 
-`NAME` 例如 `Town05_sunny_inst`；`PHS` 對應 `test_Town05_sunny_inst_gt`。模型讀的是逐幀影像與條件圖資料夾；單獨一支 MP4 不能取代它們。目前沒有已確認的 MP4 → 完整條件圖流程。
+`NAME` is for example `Town05_sunny_inst`; `PHS` is the corresponding `test_Town05_sunny_inst_gt`.
+The model reads per-frame image and conditioning-map directories; a single MP4 cannot substitute
+for them. There is currently no confirmed MP4 → full conditioning-map pipeline.
 
-README 宣告 sunny v75／night v76，但權重與本 checkout 的相容性尚未驗證，所以清單不將它們標成可直接使用的下載版本。訓練影像來源另見 [datasets/README.md](../datasets/README.md)，本次未建立訓練資料布局。
+The README declares sunny v75 and night v76, but the compatibility of those weights with this
+checkout has not been verified, so this list does not mark them as directly usable downloads.
+Training image sources are documented separately in [datasets/README.md](../datasets/README.md);
+the training data layout was not created here.
 
-## 輸出命名
+## Output naming
 
-- 模型逐幀結果：`pix2pixHD/results/MODEL/PHS_EPOCH/images/*_synthesized_image.jpg`。
-- render 影片：`pix2pixHD/results/mp4/vision_pilot/<town>/<town>_<weather>_<TAG>_FINAL_1920.mp4`。
-- 交付影片：`output/<town>_<weather>_vp55_<TAG>_FINAL_1920_visionpilot.mp4`，1920×960；檔名中的 visionpilot 不代表已加 HUD。
-- 推論 log：`pix2pixHD/checkpoints/render_<TAG>_log.txt`。
-- 外部感知 log／評分：`output/logs_<TAG>/`，由執行流程建立。
+- Per-frame model results: `pix2pixHD/results/MODEL/PHS_EPOCH/images/*_synthesized_image.jpg`
+- Render video: `pix2pixHD/results/mp4/vision_pilot/<town>/<town>_<weather>_<TAG>_FINAL_1920.mp4`
+- Delivered video: `output/<town>_<weather>_vp55_<TAG>_FINAL_1920_visionpilot.mp4`, 1920×960. The
+  word `visionpilot` in the filename does not mean a HUD has been overlaid.
+- Inference log: `pix2pixHD/checkpoints/render_<TAG>_log.txt`
+- External perception log and scores: `output/logs_<TAG>/`, created by the run.
 
-模型、epoch、tag 的動態結果目錄由程式執行時建立，無需建立空的假結果。
+Result directories that depend on model, epoch and tag are created at run time; there is no need to
+create empty placeholder result directories.
 
-## 上傳後填寫
+## To fill in after upload
 
-每個下載包填入實際 URL，並附檔名、版本、大小、SHA-256、解壓縮目錄層級、來源與授權說明。權重須列明對應程式版本及推論旗標；影像和條件圖須說明對應場景及幀命名。從新 clone 實際驗證下載、解壓及推論後再標示「已驗證」。既有缺口見 [INFERENCE_FLOW.md](INFERENCE_FLOW.md)，資產條款整理見 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。
+For each download pack, fill in the actual URL along with the filename, version, size, SHA-256,
+archive directory depth, source and licence terms. Weights must state the matching code version and
+inference flags; images and conditioning maps must state the scene they correspond to and the frame
+naming. Mark an entry "verified" only after actually downloading, extracting and running inference
+from a fresh clone. Known gaps are listed in [INFERENCE_FLOW.md](INFERENCE_FLOW.md); asset terms are
+collected in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
