@@ -48,8 +48,10 @@ scripted crash scenarios. CIPO recall is how reliably the closest in-path object
 | | Raw CARLA | carla2real | |
 |---|---:|---:|---|
 | ☀️ Daylight CIPO recall | 0.546 | **0.879** (v98scvs) | Town04: 0.12 → 0.995 |
-| 🌙 Night CIPO recall | **0.885** | 0.880 (v97nL30fL) | raw CARLA is slightly ahead at night |
-| 💥 Crash scenarios (4) | 0.18 / 0.12 / 0.25 / 0.17 | **0.54 / 0.22 / 0.94 / 0.86** | rear-end / cut-in / car flipping ahead / ego flipping |
+| 🌙 Night CIPO recall | 0.885 | **0.887** (v97nscLCS) | fewer false alarms (0.36 vs 0.40), range error 3.49 m vs 3.93 m |
+| 💥 Crash scenarios, day (4) | 0.18 / 0.12 / 0.25 / 0.17 | **0.54 / 0.22 / 0.94 / 0.86** | rear-end / cut-in / car flipping ahead / ego flipping |
+| 🌙 Crash scenarios, night (4) | 0.49 / 0.18 / 0.89 / 0.52 | **0.49 / 0.19 / 0.93 / 0.53** | same four scenarios recorded at night |
+| 🗺️ Unseen towns | Town07 0.08 · dense Town05 0.37 · Town07 night **0.62** | **0.76 · 0.60** · 0.54 | towns the models were never tuned on; night generalises less well |
 
 *Correction (2026-11-01): an earlier version of this table reported raw CARLA at 0.588 (day) and 0.822 (night). Those
 raw clips had their red and blue channels swapped; the numbers above are re-measured on correctly coloured clips.*
@@ -181,8 +183,9 @@ Feed it **1024×512**, not the full 1920×960. Lateral accuracy is several times
 | ☀️ Daylight, previous | v98f | 0.869 | 0.201 m | PandaSet + ZOD + ZOD nature frames (fine-tuned) |
 | ☀️ Daylight, older | v90dv | 0.877 | 0.197 m | PandaSet + ZOD (fine-tuned) |
 | ☀️ Daylight, no vehicle pass | v90d | **0.894** | 0.191 m | PandaSet + ZOD (fine-tuned) |
-| 🌙 Night | **v97nL30fL** | 0.880 | 0.223 m | v97nL30f, every stage saved lossless |
-| 🌙 Night, previous | v97nL30f | 0.864 | 0.230 m | v93n fine-tuned with warm-lamp PandaSet + ZOD frames |
+| 🌙 Night | **v97nscLCS** | **0.887** | 0.240 m | v97n + temporal self-consistency on PandaSet night clips; true car colours; steadier pass (weights to follow) |
+| 🌙 Night, previous | v97nL30fL | 0.880 | 0.223 m | v97nL30f, every stage saved lossless |
+| 🌙 Night, older | v97nL30f | 0.864 | 0.230 m | v93n fine-tuned with warm-lamp PandaSet + ZOD frames |
 | 🌙 Night, older | v93n | 0.710 | 0.221 m | PandaSet + ZOD (**trained from scratch**, weights published) |
 | 🌙 Night, older | v79 | **0.888** | 0.226 m | PandaSet + ZOD (fine-tuned, not published) |
 
@@ -210,7 +213,23 @@ being compared against what CARLA knows was actually there.
 v90 is fine-tuned on PandaSet (all three forward cameras, daylight frames only, colour-matched) and
 10,000 ZOD frames.
 
-The night baseline is **v97nL30fL** (2026-11-03): the v97nL30f recipe below with every stage written lossless (`FOURCC=FFV1`), which lifts night detection from 0.864 to 0.880. v97nL30f (2026-10-29) was chosen by eye: the v97n model (v93n fine-tuned with 5,735 licensed
+The night baseline is **v97nscLCS** (2026-11-13), the first night version that beats raw CARLA (0.887 vs 0.885) and
+that halves night flicker (building 2.71 → 1.30, road 1.59 → 0.84 on Town10HD). Three changes on top of v97nL30fL:
+the v97n model fine-tuned with temporal self-consistency on 54 licensed PandaSet night clips plus 1,500 ZOD night stills
+(`scripts/training/build_temporal_pandaset_night.py`, then `train_generic.sh` with `--light_input --self_consistency
+--lambda_temporal 10`, 1+1 epochs at lr 2e-5); each car's true colour taken from CARLA, because the model painted red
+cars almost black and colour is what lifted Town03 night detection from 0.626 to 0.673; and a second steadying pass
+that also covers the road:
+
+```bash
+# after the light_warm and car_lights_from steps below
+CLASSES=52,54,55,56,57,58,59,60,61,62 VEH_MARGIN=0 CMIN=0 GAIN=0.8 STRENGTH=0.9 \
+  python -m carla2real.postprocessing.scene_chroma v97nscL.mp4 <carla_rgb_dir> <label_dir> colours.mp4
+CLS=17,6,3,4,16,30,29,45,15,13,24 ALPHA=0.6 \
+  python -m carla2real.postprocessing.static_stabilize colours.mp4 <carla_rgb_dir> <label_dir> v97nscLCS.mp4
+```
+
+The previous night baseline was **v97nL30fL** (2026-11-03): the v97nL30f recipe below with every stage written lossless (`FOURCC=FFV1`), which lifts night detection from 0.864 to 0.880. v97nL30f (2026-10-29) was chosen by eye: the v97n model (v93n fine-tuned with 5,735 licensed
 frames of warm sodium street lighting), then a sodium tint only where CARLA's street lamps light the scene (building
 fronts at about a third of it, lane markings and vehicles excluded), with vehicle lamps and the light they throw onto
 the road taken from v93n so they stay white, while each car body keeps its own colour. Commands:

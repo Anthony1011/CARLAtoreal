@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="556" viewBox="0 0 1200 556" role="img" aria-labelledby="title desc">
   <title id="title">Vision Pilot lead-vehicle detection: raw CARLA vs carla2real</title>
-  <desc id="desc">CIPO recall of a camera-trained perception stack. Daylight five towns: raw CARLA 0.55, carla2real 0.88. Crash scenarios: rear-end 0.18 vs 0.54, cut-in 0.12 vs 0.22, car flipping ahead 0.25 vs 0.94, ego car flipping 0.17 vs 0.86. Night five towns: raw CARLA 0.89, carla2real 0.88.</desc>
+  <desc id="desc">CIPO recall of a camera-trained perception stack. Daylight five towns: raw CARLA 0.55, carla2real 0.88. Crash scenarios: rear-end 0.18 vs 0.54, cut-in 0.12 vs 0.22, car flipping ahead 0.25 vs 0.94, ego car flipping 0.17 vs 0.86. Night five towns: raw CARLA 0.885, carla2real 0.887.</desc>
   <rect width="1200" height="556" rx="20" fill="#0f1419"/>
   <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
     <text x="48" y="64" font-size="30" font-weight="700" fill="#eceae8">Does a real-trained perception stack see the cars?</text>
@@ -17,7 +17,7 @@
     <text x="48" y="330">Crash · car cutting in</text>
     <text x="48" y="396">Crash · car flipping ahead</text>
     <text x="48" y="462">Crash · our car flipping</text>
-    <text x="48" y="528" fill="#8a939e">Night · 5 towns</text>
+    <text x="48" y="528">Night · 5 towns</text>
   </g>
   <g id="bars">
     <rect x="400" y="176" width="382" height="14" rx="3" fill="#5c6670"/><rect x="400" y="194" width="615" height="14" rx="3" fill="#f2c94c"/>
@@ -25,7 +25,7 @@
     <rect x="400" y="308" width="87" height="14" rx="3" fill="#5c6670"/><rect x="400" y="326" width="159" height="14" rx="3" fill="#f2c94c"/>
     <rect x="400" y="374" width="175" height="14" rx="3" fill="#5c6670"/><rect x="400" y="392" width="661" height="14" rx="3" fill="#f2c94c"/>
     <rect x="400" y="440" width="121" height="14" rx="3" fill="#5c6670"/><rect x="400" y="458" width="600" height="14" rx="3" fill="#f2c94c"/>
-    <rect x="400" y="506" width="620" height="14" rx="3" fill="#5c6670"/><rect x="400" y="524" width="616" height="14" rx="3" fill="#a88b3a"/>
+    <rect x="400" y="506" width="620" height="14" rx="3" fill="#5c6670"/><rect x="400" y="524" width="621" height="14" rx="3" fill="#f2c94c"/>
   </g>
   <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18">
     <text x="792" y="189" fill="#aeb5bd">0.55</text><text x="1025" y="207" fill="#f2c94c">0.88</text>
@@ -33,6 +33,6 @@
     <text x="497" y="321" fill="#aeb5bd">0.12</text><text x="569" y="339" fill="#f2c94c">0.22</text>
     <text x="585" y="387" fill="#aeb5bd">0.25</text><text x="1071" y="405" fill="#f2c94c">0.94</text>
     <text x="531" y="453" fill="#aeb5bd">0.17</text><text x="1010" y="471" fill="#f2c94c">0.86</text>
-    <text x="1030" y="519" fill="#aeb5bd">0.89</text><text x="1026" y="537" fill="#a88b3a">0.88</text>
+    <text x="1030" y="519" fill="#aeb5bd">0.89</text><text x="1031" y="537" fill="#f2c94c">0.89</text>
   </g>
 </svg>

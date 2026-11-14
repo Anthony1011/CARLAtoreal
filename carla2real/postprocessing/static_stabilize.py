@@ -18,7 +18,7 @@ from PIL import Image
 
 from carla2real.common.vidcodec import fourcc_for
 AL, AG = float(os.environ.get('ALPHA', '0.8')), float(os.environ.get('AGREE', '30'))
-CLS = [17, 6, 3, 4, 16, 30, 29, 45, 15]
+CLS = [int(x) for x in os.environ.get('CLS', '17,6,3,4,16,30,29,45,15').split(',')]
 IN, RGBD, LABD, OUT = sys.argv[1:5]
 rgbs = sorted(glob.glob(os.path.join(RGBD, '*.png'))); labs = sorted(glob.glob(os.path.join(LABD, '*.png')))
 cap = cv2.VideoCapture(IN); W, H = int(cap.get(3)), int(cap.get(4))
