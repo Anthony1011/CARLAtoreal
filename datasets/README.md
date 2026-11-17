@@ -61,7 +61,10 @@ night alone is large enough to do it.
 
 **Mapillary Vistas and Cityscapes are "free for research".** Together they are 56% of the sunny
 corpus. That is fine for research use and is a question worth answering before commercial use.
-PandaSet and ZOD are the only two sources here that permit commercial use outright.
+PandaSet, ZOD and Boreas are the sources here that permit commercial use outright.
+
+**Boreas** (2026-11, daylight colour rounds): 3,760 + 18,553 daylight frames, downloaded from the public S3 bucket with
+`scripts/data/fetch_boreas_sunny.py` / `fetch_boreas_more.py`; licence CC BY 4.0 ([DATA_LICENSE.md](https://github.com/utiasASRL/pyboreas/blob/master/DATA_LICENSE.md)).
 
 ## Simulator
 
