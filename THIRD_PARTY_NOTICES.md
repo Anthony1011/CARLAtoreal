@@ -56,7 +56,9 @@ own training options, 2026-10-01:
 | v75 | Mapillary 19,293 · Cityscapes 4,113 · PandaSet 8,240 · ZOD 10,000 | v73 |
 | v73 | Mapillary 19,293 · Cityscapes 4,113 · PandaSet 8,240 | v50 |
 | v50 | Mapillary 19,293 · Cityscapes 4,113 · the 21 videos (9,069 frames) | earlier |
-| **v93n** (night baseline, from 2026-10-08) | PandaSet 4,320 · ZOD 10,354 | **random init — clean** |
+| **v93n** (night, 2026-10-08) | PandaSet 4,320 · ZOD 10,354 | **random init — clean** |
+| **v97nsc** (night baseline model, from 2026-11-13) | v93n + PandaSet/ZOD warm-lamp frames (v97n) + PandaSet night clips and ZOD night stills | **fine-tuned from v93n — clean** |
+| **v98cb** (daylight baseline model, from 2026-11-17) | v98 lineage + PandaSet, ZOD and Boreas (CC BY 4.0) | v90 lineage — **not clean, not published** |
 | v92c (daylight, from scratch, not yet the baseline) | PandaSet 19,158 · ZOD 10,000 | v91c ← **random init — clean** |
 | v79 (previous night baseline) | PandaSet 4,320 · ZOD 10,354 | v76 |
 | v76 | Dark Zurich 2,670 · ZOD 5,000 · PandaSet 4,320 · Mapillary 22 · other 534 | v69 |

@@ -179,12 +179,12 @@ Feed it **1024×512**, not the full 1920×960. Lateral accuracy is several times
 
 | Condition | Model | CIPO recall ↑ | Lane error ↓ | Training data |
 |---|---|---|---|---|
-| ☀️ Daylight | **v98cbvsC5s6** | 0.876 | **0.194 m** | v98sc + facade colour hints + 781 colourful ZOD stills + 3,760 Boreas frames; painted walls; steadier pass (weights to follow) |
+| ☀️ Daylight | **v98cbvsC5s6** | 0.876 | **0.194 m** | v98sc + facade colour hints + 781 colourful ZOD stills + 3,760 Boreas frames; painted walls; steadier pass (weights not published: restricted data in its lineage) |
 | ☀️ Daylight, previous | v98scvs | **0.879** | 0.195 m | v98 + temporal self-consistency on PandaSet sequences |
 | ☀️ Daylight, older | v98f | 0.869 | 0.201 m | PandaSet + ZOD + ZOD nature frames (fine-tuned) |
 | ☀️ Daylight, older | v90dv | 0.877 | 0.197 m | PandaSet + ZOD (fine-tuned) |
 | ☀️ Daylight, no vehicle pass | v90d | **0.894** | 0.191 m | PandaSet + ZOD (fine-tuned) |
-| 🌙 Night | **v97nscLCSW** | **0.888** | 0.229 m | v97nscLCS + building colours from CARLA (weights to follow) |
+| 🌙 Night | **v97nscLCSW** | **0.888** | 0.229 m | v97nscLCS + building colours from CARLA (weights: release asset `carla2real_semantic_v97nsc_G_fp16.pth`) |
 | 🌙 Night, previous | v97nscLCS | 0.887 | 0.240 m | v97n + temporal self-consistency on PandaSet night clips; true car colours; steadier pass |
 | 🌙 Night, older | v97nL30fL | 0.880 | 0.223 m | v97nL30f, every stage saved lossless |
 | 🌙 Night, older | v97nL30f | 0.864 | 0.230 m | v93n fine-tuned with warm-lamp PandaSet + ZOD frames |

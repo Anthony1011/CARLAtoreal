@@ -7,10 +7,12 @@ licence they carry, and the three ways to ship them — because the obvious one 
 
 | model | file | size | corpus | init |
 |---|---|---:|---|---|
-| Night baseline **v93n** | `carla2real_semantic_v93n_G_fp16.pth` | 350 MB | PandaSet night 4,320 · ZOD night 10,354 | **random (from scratch)** |
+| Night, older **v93n** | `carla2real_semantic_v93n_G_fp16.pth` | 350 MB | PandaSet night 4,320 · ZOD night 10,354 | **random (from scratch)** |
+| Night baseline model **v97nsc** (renders v97nscLCSW) | `carla2real_semantic_v97nsc_G_fp16.pth` | 350 MB | v97n: + 5,735 warm-lamp PandaSet/ZOD frames; v97nsc: + 54 PandaSet night clips and 1,500 ZOD night stills (temporal self-consistency) | v93n → v97n → v97nsc |
 
-The daylight baseline (v90dv) is **not** published: its weights descend from checkpoints trained on
-restricted data (see Licence below). Its from-scratch counterpart v92c is ~1 point behind on CIPO and
+The daylight baseline (v98cbvsC5s6, model v98cb) is **not** published: like every daylight model since v90, its
+weights descend from checkpoints trained on restricted data (see Licence below), even though every round since
+v98 added only licensed data (PandaSet, ZOD, Boreas). Its from-scratch counterpart v92c is ~1 point behind on CIPO and
 is the candidate for a first public daylight release.
 
 The generator is 183.5M parameters. At fp32 that is **700 MB per model**; the files above are fp16,
@@ -44,8 +46,8 @@ Then either drag the `.pth` file onto a new release at
 `https://github.com/<you>/CARLAtoreal/releases/new`, or with the `gh` CLI:
 
 ```bash
-gh release create v1.0 weights/*.pth \
-  --title "Night baseline v93n (trained from scratch, licensed data only)" \
+gh release create v1.1 weights/*.pth \
+  --title "Night baseline v97nsc (licensed lineage) + v93n" \
   --notes "fp16 generator weights. CC BY-SA 4.0 — see weights/LICENSE."
 ```
 
@@ -81,5 +83,7 @@ person.
 **v93n is the first checkpoint fit to publish.** It was trained from random initialisation
 (`scripts/training/train_from_scratch_night.sh`) on PandaSet and ZOD night frames only, so nothing
 restricted is in its lineage. Every earlier checkpoint is fine-tuned from models that saw Mapillary,
-Cityscapes, Dark Zurich or video of unestablished licence, and stays unpublished. See
+Cityscapes, Dark Zurich or video of unestablished licence, and stays unpublished. **v97nsc** (current night
+baseline model) is fine-tuned from v93n on PandaSet and ZOD only (v93n → v97n → v97nsc), so it inherits the same clean
+lineage. See
 [Weight provenance](../THIRD_PARTY_NOTICES.md#weight-provenance).

@@ -13,7 +13,7 @@ else
   BASE="https://github.com/$REPO/releases/download/$TAG"
 fi
 
-for M in carla2real_semantic_v93n; do   # the only model trained from scratch on licensed data; see weights/README.md
+for M in carla2real_semantic_v93n carla2real_semantic_v97nsc; do   # licensed lineage only (v93n from scratch; v97nsc = v93n -> v97n -> v97nsc); see weights/README.md
   mkdir -p "$CK/$M"
   DST=$CK/$M/latest_net_G.pth
   if [ -s "$DST" ]; then
